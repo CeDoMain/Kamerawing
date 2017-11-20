@@ -7,39 +7,36 @@
 class CamHE130
 {
     // Felder
+public:
+    const char* Name;
+    
 private:
     IPAddress CamIp;
-    EthernetClient* Client:
+    unsigned short RecvPort;
+    static EthernetClient Camera;
+    unsigned long LastMessageTimestamp;
+    //EthernetServer Controller;
 
     // Konstruktor
 public:
-    CamHE130(IPAddress camIp, EthernetClient* client);
+    CamHE130(const char* name, IPAddress camIp, unsigned short recvPort);
 
     // Methoden
 public:
     // Initialisiert die Kameraverbindung
     void Begin();
 
-    // Sendet einen Befehl an den PTZ-Controller der Kamera
-    void SendToPTZ(char* cmd);
+    // Muss in jedem Frame aufgerufen werden
+    void Update();
 
-    // Sendet einen Befehl an den CAM-Controller der Kamera
-    void SendToCAM(char* cmd);
-
-    // Setzt Pan und Tilt Position (0 - 65535)
-    void SetPanTilt(word pan, word tilt);
-    
     // Verändert Pan mit der angegeben Geschwindigkeit (1 - 50 - 99)
-    void MovePan(byte speed);
+    void SetPanSpeed(byte speed);
     
     // Verändert Tilt mit der angegeben Geschwindigkeit (1 - 50 - 99)
-    void MoveTilt(byte speed);
-
-    // Setzt Zoom Position (0 - 2730)
-    void SetZoom(word zoom)
+    void SetTiltSpeed(byte speed);
 
     // Verändert Zoom mit der angegebenen Geschwindigkeit (1 - 50 - 99)
-    void MoveZoom(byte speed)
+    void SetZoomSpeed(byte speed);
 
     // Setzt Fokus Position (0 - 2730)
     void SetFocus(word focus);
@@ -66,16 +63,23 @@ public:
     void SetGainR(word gain);
     
     // Setzt Gain Blau (0 - 150 - 300)
-    void SetGainR(word gain);
+    void SetGainB(word gain);
     
     // Setzt Pedestal Rot (0 - 100 - 200)
-    void SetGainR(word ped);
+    void SetPedR(word ped);
     
     // Setzt Pedestal Blau (0 - 100 - 200)
-    void SetGainR(word ped);
+    void SetPedB(word ped);
     
     // Setzt Pedestal Schwarz (0 - 150 - 300)
     void SetPedestal(word ped);
+
+private:    
+    // Sendet einen Befehl an den PTZ-Controller der Kamera
+    void SendToPtz(char* cmd);
+
+    // Sendet einen Befehl an den CAM-Controller der Kamera
+    void SendToCam(char* cmd);
     
     /*
     
@@ -105,6 +109,11 @@ public:
     R Pedestal	/cgi-bin/aw_cam	ORP:[###]	Rped (032-096-0FA)
     B Pedestal	/cgi-bin/aw_cam	OBP:[###]	Bped (032-096-0FA)
     Pedestal	/cgi-bin/aw_cam	OTP:[###]	Ped (000-096-12C)
+    
+    Kameratyp /cgi-bin/aw_cam QID Response überprüfen 
+    Tally An/Aus
+    Lens information notification
+    min 130ms delay
 
     */
 };

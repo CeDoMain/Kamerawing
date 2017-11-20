@@ -17,7 +17,11 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ]
         },
         {
             "name": "Linux",
@@ -49,7 +53,8 @@
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/ucrt",
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/shared",
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/winrt",
-                "${workspaceRoot}"
+                "${workspaceRoot}",
+                "C:\\Users\\cedom\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.20\\cores\\arduino"
             ],
             "defines": [
                 "_DEBUG",
@@ -63,12 +68,13 @@
                     "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/ucrt",
                     "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/shared",
                     "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/winrt",
-                    "${workspaceRoot}"
+                    "${workspaceRoot}",
+                    "C:\\Users\\cedom\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.20\\cores\\arduino"
                 ],
-                "limitSymbolsToIncludedHeaders": true,
+                "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": ""
             }
         }
     ],
-    "version": 2
+    "version": 3
 }

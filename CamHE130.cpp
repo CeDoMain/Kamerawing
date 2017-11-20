@@ -1,69 +1,103 @@
 #include "CamHE130.h"
 
-CamHE130::CamHE130(IPAddress camIp, EthernetClient* client)
-    : CamIp(camIp), Client(client)
-{
+EthernetClient CamHE130::Camera = EthernetClient();
 
+CamHE130::CamHE130(const char* name, IPAddress camIp, unsigned short recvPort)
+    : Name(name), CamIp(camIp), RecvPort(recvPort), LastMessageTimestamp(0)//, Controller(recvPort)
+{
+    
 }
 
 void CamHE130::Begin()
 {
+    // Update Notification aktivieren
+}
+
+void CamHE130::Update()
+{
 
 }
 
-void CamHE130::SendToPTZ(char* cmd)
+void CamHE130::SendToPtz(char* cmd)
 {
-    if (client.connect(CamIp, 80) == 1)
+    if (millis() - LastMessageTimestamp < 130)
+        return;
+        
+    if (Camera.connect(CamIp, 80) == 1)
     {
-        byte msg[96];
-        sprintf(msg, F("GET /cgi-bin/aw_ptz?cmd=%%23%s&res=1 HTTP/1.1\r\nHost: %i.%i.%i.%i\r\n\r\n"), cmd, ip[0], ip[1], ip[2], ip[3]);
-        client.write(msg, sizeof(msg));
-        client.stop();
+        char msg[96];
+        sprintf(msg, "GET /cgi-bin/aw_ptz?cmd=%%23%s&res=1 HTTP/1.0\r\nHost: %i.%i.%i.%i\r\nConnection: close\r\n\r\n", cmd, Ethernet.localIP()[0], Ethernet.localIP()[1], Ethernet.localIP()[2], Ethernet.localIP()[3]);
+        Camera.write(msg);
+        Camera.stop();
+        LastMessageTimestamp = millis();
     }
 }
 
-void CamHE130::SendToCAM(char* cmd)
+void CamHE130::SendToCam(char* cmd)
 {
-    if (client.connect(CamIp, 80) == 1)
+    if (millis() - LastMessageTimestamp < 130)
+        return;
+        
+    if (Camera.connect(CamIp, 80) == 1)
     {
-        byte msg[96];
-        sprintf(msg, F("GET /cgi-bin/aw_cam?cmd=%%23%s&res=1 HTTP/1.1\r\nHost: %i.%i.%i.%i\r\n\r\n"), cmd, ip[0], ip[1], ip[2], ip[3]);
-        client.write(msg, sizeof(msg));
-        client.stop();
+        char msg[96];
+        sprintf(msg, "GET /cgi-bin/aw_cam?cmd=%s&res=1 HTTP/1.0\r\nHost: %i.%i.%i.%i\r\nConnection: close\r\n\r\n", cmd, Ethernet.localIP()[0], Ethernet.localIP()[1], Ethernet.localIP()[2], Ethernet.localIP()[3]);
+        Camera.write(msg);
+        Camera.stop();
+        LastMessageTimestamp = millis();
     }
 }
 
-void CamHE130::SetPanTilt(word pan, word tilt)
+void CamHE130::SetPanSpeed(byte speed)
 {
-    byte msg[16];
-    sprintf(msg, F("APC%X04%X04"), constrain(pan, 0, 65535), constrain(tilt, 0, 65535));
-    SendToPTZ(msg);
+    char msg[16];
+    sprintf(msg, "P%02u", constrain(speed, 1, 99));
+    SendToPtz(msg);
 }
 
-void CamHE130::MovePan(byte speed)
+void CamHE130::SetTiltSpeed(byte speed)
 {
-    byte msg[16];
-    sprintf(msg, F("P%u02"), constrain(speed, 1, 99));
-    SendToPTZ(msg);
+    char msg[16];
+    sprintf(msg, "T%02u", constrain(speed, 1, 99));
+    SendToPtz(msg);
 }
 
-void CamHE130::MoveTilt(byte speed)
+void CamHE130::SetZoomSpeed(byte speed)
 {
-    byte msg[16];
-    sprintf(msg, F("T%u02"), constrain(speed, 1, 99));
-    SendToPTZ(msg);
+    char msg[16];
+    sprintf(msg, "Z%02u", constrain(speed, 1, 99));
+    SendToPtz(msg);
 }
 
-void CamHE130::SetZoom(word zoom)
+void CamHE130::SetGainR(word gain)
 {
-    byte msg[16];
-    sprintf(msg, F("AXZ%X03"), constrain(speed, 1365, 4095));
-    SendToPTZ(msg);
+    char msg[16];
+    sprintf(msg, "ORI:%03X", constrain(gain, 0, 300));
+    SendToCam(msg);
 }
 
-// Verändert Zoom mit der angegebenen Geschwindigkeit (1 - 50 - 99)
-Zoom Speed	/cgi-bin/aw_ptz	Z	ZoomSpeed (01-50-99)
-void CamHE130::MoveZoom(byte speed)
+void CamHE130::SetGainB(word gain)
+{
+    char msg[16];
+    sprintf(msg, "OBI:%03X", constrain(gain, 0, 300));
+    SendToCam(msg);
+}
+
+void CamHE130::SetPedR(word ped)
+{
+    char msg[16];
+    sprintf(msg, "ORP:%03X", constrain(ped, 50, 250));
+    SendToCam(msg);
+}
+
+void CamHE130::SetPedB(word ped)
+{
+    char msg[16];
+    sprintf(msg, "OBP:%03X", constrain(ped, 50, 250));
+    SendToCam(msg);
+}
+
+/*
 
 // Setzt Fokus Position (0 - 2730)
 Focus Position	/cgi-bin/aw_ptz	AXF[###]	FocusPos (555-FFF)
@@ -93,22 +127,8 @@ void CamHE130::EnableAI(bool enable);
 One Touch AF	/cgi-bin/aw_cam	OSE:69:1	OTAF
 void CamHE130::OneTouchAF();
 
-// Setzt Gain Rot (0 - 150 - 300)
-R Gain	/cgi-bin/aw_cam	ORI:[###]	Rgain (000-096-12C)
-void CamHE130::SetGainR(word gain);
-
-// Setzt Gain Blau (0 - 150 - 300)
-B Gain	/cgi-bin/aw_cam	OBI:[###]	Bgain (000-096-12C)
-void CamHE130::SetGainR(word gain);
-
-// Setzt Pedestal Rot (0 - 100 - 200)
-R Pedestal	/cgi-bin/aw_cam	ORP:[###]	Rped (032-096-0FA)
-void CamHE130::SetGainR(word ped);
-
-// Setzt Pedestal Blau (0 - 100 - 200)
-B Pedestal	/cgi-bin/aw_cam	OBP:[###]	Bped (032-096-0FA)
-void CamHE130::SetGainR(word ped);
-
 // Setzt Pedestal Schwarz (0 - 150 - 300)
 Pedestal	/cgi-bin/aw_cam	OTP:[###]	Ped (000-096-12C)
 void CamHE130::SetPedestal(word ped);
+
+*/
